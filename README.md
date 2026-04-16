@@ -32,6 +32,7 @@ A simple daily Sudoku web app built with TypeScript, Turborepo, Next.js, Fastify
 
 The Prisma helper scripts load the repo root `.env` automatically, so you do not need a separate `apps/api/.env` for normal local setup.
 The local Docker Postgres port is `5433` by default so it does not collide with a host PostgreSQL service on `5432`.
+The Docker dev database now uses PostgreSQL 18. If you are upgrading from an earlier local major version, recreate the Docker volume with `npm run db:reset` before starting the database again.
 
 Default URLs:
 
@@ -78,6 +79,7 @@ On Linux or WSL, browser binaries may still need system packages. If Firefox or 
 ## Docker
 
 - `docker compose up -d db`: start only Postgres.
+- The local database container uses `postgres:18-alpine`.
 - The database is published on host port `5433` and maps to container port `5432`.
 - `docker compose --profile fullstack up --build`: run Postgres, API, and web together.
 - `apps/api/Dockerfile` and `apps/web/Dockerfile`: production-ready multi-stage images targeting Node 24.
