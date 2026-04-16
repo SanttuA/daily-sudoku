@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: daily-sudoku-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: daily_sudoku
+      POSTGRES_USER: daily_sudoku
+      POSTGRES_PASSWORD: daily_sudoku
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U daily_sudoku -d daily_sudoku']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    profiles: ['fullstack']
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://daily_sudoku:daily_sudoku@db:5432/daily_sudoku?schema=public
+      PORT: 4000
+      HOST: 0.0.0.0
+      WEB_ORIGIN: http://127.0.0.1:3000,http://localhost:3000
+      SESSION_SECRET: change-me-in-production
+      SESSION_TTL_DAYS: 30
+      RATE_LIMIT_MAX: 50
+      NODE_ENV: production
+    ports:
+      - '4000:4000'
+
+  web:
+    profiles: ['fullstack']
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:4000
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:4000
+    ports:
+      - '3000:3000'
+
+volumes:
+  postgres_data:

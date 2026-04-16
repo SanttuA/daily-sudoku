@@ -1,0 +1,46 @@
+import { z } from 'zod';
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().min(1),
+  PORT: z.coerce.number().int().positive().default(4000),
+  HOST: z.string().default('0.0.0.0'),
+  WEB_ORIGIN: z.string().default('http://127.0.0.1:3000,http://localhost:3000'),
+  SESSION_SECRET: z.string().min(16),
+  SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(50),
+  FIXED_UTC_DATE: z
+    .string()
+    .optional()
+    .transform((value) => value || undefined),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+});
+
+export type AppConfig = {
+  databaseUrl: string;
+  port: number;
+  host: string;
+  webOrigins: string[];
+  sessionSecret: string;
+  sessionTtlDays: number;
+  rateLimitMax: number;
+  fixedUtcDate?: string;
+  nodeEnv: 'development' | 'test' | 'production';
+};
+
+export function createConfig(source: Record<string, string | undefined>): AppConfig {
+  const parsed = envSchema.parse(source);
+
+  return {
+    databaseUrl: parsed.DATABASE_URL,
+    port: parsed.PORT,
+    host: parsed.HOST,
+    webOrigins: parsed.WEB_ORIGIN.split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+    sessionSecret: parsed.SESSION_SECRET,
+    sessionTtlDays: parsed.SESSION_TTL_DAYS,
+    rateLimitMax: parsed.RATE_LIMIT_MAX,
+    fixedUtcDate: parsed.FIXED_UTC_DATE,
+    nodeEnv: parsed.NODE_ENV,
+  };
+}

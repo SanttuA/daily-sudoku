@@ -1,0 +1,44 @@
+{
+  "name": "daily-sudoku",
+  "private": true,
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "oxlint . --deny warnings --ignore-pattern apps/web/next-env.d.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --project tsconfig.json --noEmit && turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "tsx scripts/run-playwright.ts",
+    "test:e2e:auto": "tsx scripts/run-playwright.ts --browser=auto",
+    "test:e2e:chromium": "tsx scripts/run-playwright.ts --browser=chromium",
+    "test:e2e:firefox": "tsx scripts/run-playwright.ts --browser=firefox",
+    "test:e2e:all": "tsx scripts/run-playwright.ts --browser=all",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v",
+    "db:generate": "npm --workspace @daily-sudoku/api run prisma:generate",
+    "db:migrate": "npm --workspace @daily-sudoku/api run prisma:migrate:deploy",
+    "db:seed": "npm --workspace @daily-sudoku/puzzles run build && npm --workspace @daily-sudoku/api run seed",
+    "docker:fullstack": "docker compose --profile fullstack up --build",
+    "puzzles:import": "npm --workspace @daily-sudoku/puzzles run import",
+    "ci": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@playwright/test": "^1.53.0",
+    "oxlint": "^1.5.0",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.4",
+    "turbo": "^2.0.12",
+    "typescript": "^5.8.3"
+  }
+}
