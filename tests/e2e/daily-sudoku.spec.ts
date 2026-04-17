@@ -38,27 +38,11 @@ test('home page stays focused on landing content and routes into play', async ({
 test('registered players can submit a solve and see it in leaderboard and history', async ({
   page,
 }) => {
-  await page.goto('/auth/signup');
-  const displayNameInput = page.getByLabel('Display name');
-  const emailInput = page.getByLabel('Email');
-  const passwordInput = page.getByLabel('Password');
-
-  await displayNameInput.focus();
-  await page.keyboard.type('Playwright Ace');
-
-  await page.keyboard.press('Tab');
-  await expect(emailInput).toBeFocused();
-  await page.keyboard.type('playwright@example.com');
-
-  await page.keyboard.press('Tab');
-  await expect(passwordInput).toBeFocused();
-  await page.keyboard.type('super-secret');
-
-  await expect(displayNameInput).toHaveValue('Playwright Ace');
-  await expect(emailInput).toHaveValue('playwright@example.com');
-  await expect(passwordInput).toHaveValue('super-secret');
-
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await signUp(page, {
+    displayName: 'Playwright Ace',
+    email: 'playwright@example.com',
+    password: 'super-secret',
+  });
 
   await expect(page).toHaveURL(/\/play$/);
   await expect(page.getByTestId('sudoku-board')).toBeVisible();
@@ -74,6 +58,59 @@ test('registered players can submit a solve and see it in leaderboard and histor
   await page.goto('/history');
   await expect(page.getByText('variant-7')).toBeVisible();
 });
+
+test('signed-in users can log out without API errors', async ({ page }) => {
+  await signUp(page, {
+    displayName: 'Logout Ace',
+    email: 'logout@example.com',
+    password: 'super-secret',
+  });
+
+  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.getByText('Logout Ace', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
+
+  const logoutResponsePromise = page.waitForResponse(
+    (response) => response.url().endsWith('/auth/logout') && response.request().method() === 'POST',
+  );
+
+  await page.getByRole('button', { name: 'Log out' }).click();
+
+  const logoutResponse = await logoutResponsePromise;
+  expect(logoutResponse.status()).toBe(204);
+
+  await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Create account' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Log out' })).toHaveCount(0);
+  await expect(page.getByText('Logout Ace', { exact: true })).toHaveCount(0);
+});
+
+async function signUp(
+  page: Page,
+  input: { displayName: string; email: string; password: string },
+): Promise<void> {
+  await page.goto('/auth/signup');
+  const displayNameInput = page.getByLabel('Display name');
+  const emailInput = page.getByLabel('Email');
+  const passwordInput = page.getByLabel('Password');
+
+  await displayNameInput.focus();
+  await page.keyboard.type(input.displayName);
+
+  await page.keyboard.press('Tab');
+  await expect(emailInput).toBeFocused();
+  await page.keyboard.type(input.email);
+
+  await page.keyboard.press('Tab');
+  await expect(passwordInput).toBeFocused();
+  await page.keyboard.type(input.password);
+
+  await expect(displayNameInput).toHaveValue(input.displayName);
+  await expect(emailInput).toHaveValue(input.email);
+  await expect(passwordInput).toHaveValue(input.password);
+
+  await page.getByRole('button', { name: 'Create account' }).click();
+}
 
 async function fillSolvedBoard(page: Page): Promise<void> {
   for (let index = 0; index < fixedPuzzle.givens.length; index += 1) {

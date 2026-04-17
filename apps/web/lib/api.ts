@@ -77,17 +77,21 @@ export async function fetchJson<TResponse>(
   init?: Omit<RequestInit, 'body'> & { body?: JsonValue },
 ): Promise<TResponse> {
   const apiBaseUrl = resolveApiBaseUrl();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...init?.headers,
-  };
+  const headers = new Headers(init?.headers);
+  const body = init?.body === undefined ? undefined : JSON.stringify(init.body);
+
+  if (body === undefined) {
+    headers.delete('Content-Type');
+  } else if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
     credentials: 'include',
     cache: 'no-store',
     headers,
-    body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+    body,
   });
 
   if (response.status === 204) {
