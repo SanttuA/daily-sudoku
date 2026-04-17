@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { useAuth } from './auth-provider';
+import { useTheme } from './theme-provider';
 
 const links = [
   { href: '/play', label: 'Play' },
@@ -14,6 +15,8 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname();
   const { user, loading, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const nextTheme = theme === 'dark' ? 'light' : 'dark';
 
   return (
     <header className="site-header">
@@ -35,6 +38,16 @@ export function SiteHeader() {
         ))}
       </nav>
       <div className="header-actions">
+        <button
+          aria-label={`Switch to ${nextTheme} mode`}
+          aria-pressed={theme === 'dark'}
+          className="ghost-button theme-toggle"
+          data-testid="theme-toggle"
+          type="button"
+          onClick={toggleTheme}
+        >
+          {nextTheme === 'dark' ? 'Dark mode' : 'Light mode'}
+        </button>
         {loading ? (
           <span className="muted-label">Checking session…</span>
         ) : user ? (

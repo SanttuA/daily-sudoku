@@ -35,6 +35,30 @@ test('home page stays focused on landing content and routes into play', async ({
   await expect(page.getByTestId('sudoku-board')).toHaveCount(0);
 });
 
+test('theme preference persists across reloads and route changes', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(page.getByTestId('theme-toggle')).toContainText('Dark mode');
+
+  await page.getByTestId('theme-toggle').click();
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByTestId('theme-toggle')).toContainText('Light mode');
+
+  await page.reload();
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByTestId('theme-toggle')).toContainText('Light mode');
+
+  await page.goto('/play');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  await page.goto('/leaderboard');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+});
+
 test('registered players can submit a solve and see it in leaderboard and history', async ({
   page,
 }) => {

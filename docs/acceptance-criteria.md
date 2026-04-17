@@ -29,6 +29,13 @@
 - Anonymous users can fully play the daily puzzle without signing in.
 - Anonymous users cannot submit official leaderboard scores.
 
+## UI
+
+- A light or dark mode switcher is available from the global header on every page.
+- On a first visit with no saved choice, the active theme follows the browser or OS color preference.
+- After a user switches to light or dark mode, that choice persists across refreshes and route changes in the same browser.
+- Light and dark theme styling apply consistently to the landing page, play page, auth pages, leaderboard page, and history page.
+
 ## Ops
 
 - The repo includes Docker setup for local Postgres and optional full-stack runs.

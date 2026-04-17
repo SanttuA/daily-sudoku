@@ -15,19 +15,27 @@ Ship a simple daily Sudoku website where anyone can play the same daily puzzle, 
 ### Anonymous Play
 
 1. Visit the home page.
-2. Read a concise landing page and choose to start today's puzzle.
-3. Open `/play` and load the current UTC daily puzzle.
-4. Play immediately with no sign-in requirement.
-5. Refresh or return later and resume from browser-local progress.
-6. If the puzzle is solved while anonymous, show a prompt to create an account or sign in to submit future scores.
+2. Use the global header to switch between light and dark mode if desired.
+3. Read a concise landing page and choose to start today's puzzle.
+4. Open `/play` and load the current UTC daily puzzle.
+5. Play immediately with no sign-in requirement.
+6. Refresh or return later and resume from browser-local progress.
+7. If the puzzle is solved while anonymous, show a prompt to create an account or sign in to submit future scores.
 
 ### Registered Play
 
 1. Create an account with email, display name, and password.
 2. Log in and open the same daily puzzle as everyone else at `/play`.
-3. Solve the puzzle and submit an official completion.
-4. Appear on the daily leaderboard.
-5. View personal completion history from prior days.
+3. Switch between light and dark mode from the global header on any page.
+4. Solve the puzzle and submit an official completion.
+5. Appear on the daily leaderboard.
+6. View personal completion history from prior days.
+
+## UI Personalization
+
+- The site supports light and dark mode.
+- Before a player makes an explicit choice, the web app follows the browser or OS color scheme.
+- After a player switches themes, the chosen light or dark mode persists in that browser across pages and reloads.
 
 ## Game Rules
 

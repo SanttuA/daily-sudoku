@@ -35,10 +35,12 @@
 ## Frontend Rules
 
 - Puzzle progress is stored in browser local storage by `puzzleDate`.
+- Theme preference is stored in browser local storage and applied to `<html data-theme>` before React hydration.
 - All API calls use the shared contracts package and include credentials when auth is required.
 - The homepage is a landing page with lightweight daily puzzle context and a CTA into `/play`.
 - The `/play` route is the primary play surface and includes the puzzle board, timer, gameplay state, and leaderboard context.
 - The gameplay timer stays idle until the player makes their first editable move.
+- When no explicit theme preference exists, the web app follows `prefers-color-scheme` and keeps the active theme in sync while the page is open.
 
 ## Docker And Delivery
 

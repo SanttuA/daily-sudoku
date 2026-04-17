@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 
 import { AuthProvider } from '../components/auth-provider';
 import { SiteHeader } from '../components/site-header';
+import { ThemeProvider } from '../components/theme-provider';
+import { getThemeInitScript } from '../lib/theme';
 
 import './globals.css';
 
@@ -13,14 +15,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getThemeInitScript() }} />
+      </head>
       <body>
-        <AuthProvider>
-          <div className="app-frame">
-            <SiteHeader />
-            <main className="main-content">{children}</main>
-          </div>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="app-frame">
+              <SiteHeader />
+              <main className="main-content">{children}</main>
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
