@@ -51,17 +51,22 @@ export function getDocumentTheme(): Theme | null {
 export function getThemeInitScript(): string {
   return `
     (function () {
+      var mediaQuery = ${JSON.stringify(THEME_DARK_MEDIA_QUERY)};
       var fallbackTheme = 'light';
+
+      try {
+        fallbackTheme = window.matchMedia(mediaQuery).matches ? 'dark' : 'light';
+      } catch (error) {
+        fallbackTheme = 'light';
+      }
+
       try {
         var storageKey = ${JSON.stringify(THEME_STORAGE_KEY)};
-        var mediaQuery = ${JSON.stringify(THEME_DARK_MEDIA_QUERY)};
         var storedTheme = window.localStorage.getItem(storageKey);
         var theme =
           storedTheme === 'light' || storedTheme === 'dark'
             ? storedTheme
-            : window.matchMedia(mediaQuery).matches
-              ? 'dark'
-              : 'light';
+            : fallbackTheme;
 
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
