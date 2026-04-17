@@ -15,7 +15,7 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname();
   const { user, loading, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { resolved, theme, toggleTheme } = useTheme();
   const nextTheme = theme === 'dark' ? 'light' : 'dark';
 
   return (
@@ -38,16 +38,26 @@ export function SiteHeader() {
         ))}
       </nav>
       <div className="header-actions">
-        <button
-          aria-label={`Switch to ${nextTheme} mode`}
-          aria-pressed={theme === 'dark'}
-          className="ghost-button theme-toggle"
-          data-testid="theme-toggle"
-          type="button"
-          onClick={toggleTheme}
-        >
-          {nextTheme === 'dark' ? 'Dark mode' : 'Light mode'}
-        </button>
+        {resolved ? (
+          <button
+            aria-label={`Switch to ${nextTheme} mode`}
+            aria-pressed={theme === 'dark'}
+            className="ghost-button theme-toggle"
+            data-testid="theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+          >
+            {nextTheme === 'dark' ? 'Dark mode' : 'Light mode'}
+          </button>
+        ) : (
+          <span
+            aria-hidden="true"
+            className="ghost-button theme-toggle theme-toggle-placeholder"
+            data-testid="theme-toggle-placeholder"
+          >
+            Theme
+          </span>
+        )}
         {loading ? (
           <span className="muted-label">Checking session…</span>
         ) : user ? (

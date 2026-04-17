@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { installMatchMediaMock } from './match-media';
@@ -49,7 +50,9 @@ describe('SiteHeader theme switcher', () => {
       </ThemeProvider>,
     );
 
-    expect(screen.getByText('Dark mode')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeInTheDocument();
+    });
 
     await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
 
@@ -85,6 +88,22 @@ describe('SiteHeader theme switcher', () => {
     );
   });
 
+  it('renders a non-semantic placeholder during SSR before the theme resolves', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+
+    const markup = renderToStaticMarkup(
+      <ThemeProvider>
+        <SiteHeader />
+      </ThemeProvider>,
+    );
+
+    expect(markup).toContain('theme-toggle-placeholder');
+    expect(markup).toContain('Theme');
+    expect(markup).not.toContain('Switch to dark mode');
+    expect(markup).not.toContain('Switch to light mode');
+    expect(markup).not.toContain('aria-pressed');
+  });
+
   it('falls back without crashing when storage access throws during render', async () => {
     installMatchMediaMock(true);
     document.documentElement.removeAttribute('data-theme');
@@ -103,9 +122,10 @@ describe('SiteHeader theme switcher', () => {
     }).not.toThrow();
 
     await waitFor(() => {
-      expect(document.documentElement.dataset.theme).toBe('dark');
+      expect(screen.getByRole('button', { name: 'Switch to light mode' })).toBeInTheDocument();
     });
 
+    expect(document.documentElement.dataset.theme).toBe('dark');
     expect(screen.getByText('Light mode')).toBeInTheDocument();
     getItemSpy.mockRestore();
   });

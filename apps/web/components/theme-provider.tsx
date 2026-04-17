@@ -7,13 +7,13 @@ import {
   THEME_DARK_MEDIA_QUERY,
   THEME_STORAGE_KEY,
   applyTheme,
-  getDocumentTheme,
   getSystemTheme,
   readStoredTheme,
   type Theme,
 } from '../lib/theme';
 
 type ThemeContextValue = {
+  resolved: boolean;
   theme: Theme;
   toggleTheme: () => void;
 };
@@ -21,18 +21,33 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreference] = useState<Theme | null>(() => readStoredTheme());
-  const [systemTheme, setSystemTheme] = useState<Theme>(() => {
-    return getDocumentTheme() ?? getSystemTheme();
-  });
+  const [preference, setPreference] = useState<Theme | null>(null);
+  const [systemTheme, setSystemTheme] = useState<Theme>('light');
+  const [resolved, setResolved] = useState(false);
 
   const theme = preference ?? systemTheme;
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    const nextPreference = readStoredTheme();
+
+    setPreference(nextPreference);
+    setSystemTheme(nextPreference ?? getSystemTheme());
+    setResolved(true);
+  }, []);
 
   useEffect(() => {
+    if (!resolved) {
+      return;
+    }
+
+    applyTheme(theme);
+  }, [resolved, theme]);
+
+  useEffect(() => {
+    if (!resolved || preference !== null) {
+      return;
+    }
+
     const mediaQuery = window.matchMedia(THEME_DARK_MEDIA_QUERY);
 
     const syncSystemTheme = (): void => {
@@ -40,23 +55,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
 
     syncSystemTheme();
-
-    if (preference !== null) {
-      return;
-    }
-
     mediaQuery.addEventListener('change', syncSystemTheme);
 
     return () => mediaQuery.removeEventListener('change', syncSystemTheme);
-  }, [preference]);
+  }, [preference, resolved]);
 
   function toggleTheme(): void {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch {
+      // Keep the in-memory preference even when storage is unavailable.
+    }
+
     setPreference(nextTheme);
   }
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ resolved, theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme(): ThemeContextValue {

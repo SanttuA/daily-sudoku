@@ -237,6 +237,11 @@ textarea {
   min-width: 120px;
 }
 
+.theme-toggle-placeholder {
+  cursor: default;
+  user-select: none;
+}
+
 .wide {
   width: 100%;
 }
