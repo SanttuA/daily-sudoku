@@ -36,7 +36,9 @@
 
 - Puzzle progress is stored in browser local storage by `puzzleDate`.
 - All API calls use the shared contracts package and include credentials when auth is required.
-- The homepage is the primary play surface and includes puzzle state, timer, and leaderboard context.
+- The homepage is a landing page with lightweight daily puzzle context and a CTA into `/play`.
+- The `/play` route is the primary play surface and includes the puzzle board, timer, gameplay state, and leaderboard context.
+- The gameplay timer stays idle until the player makes their first editable move.
 
 ## Docker And Delivery
 

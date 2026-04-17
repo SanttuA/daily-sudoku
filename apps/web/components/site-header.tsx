@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from './auth-provider';
 
 const links = [
-  { href: '/', label: 'Daily puzzle' },
+  { href: '/play', label: 'Play' },
   { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/history', label: 'History' },
 ];

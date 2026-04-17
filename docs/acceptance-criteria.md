@@ -2,9 +2,11 @@
 
 ## Gameplay
 
-- Visiting `/` loads the current daily puzzle for the active UTC date.
+- Visiting `/` shows a landing page with daily puzzle context and a primary CTA to `/play`.
+- Visiting `/play` loads the current daily puzzle for the active UTC date.
 - The puzzle board prevents edits to givens and allows only digits `1` through `9` in editable cells.
 - Entered progress persists across browser refreshes for anonymous and authenticated users.
+- The elapsed timer stays at `00:00` until the first editable move, then stops increasing when the puzzle is solved.
 - Solving the board shows completion feedback and the elapsed timer stops increasing.
 
 ## Auth

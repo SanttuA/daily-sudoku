@@ -7,7 +7,7 @@ const fixedPuzzle = {
 };
 
 test('anonymous progress persists across refresh', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/play');
   await expect(page.getByTestId('sudoku-board')).toBeVisible();
 
   await page.getByTestId('cell-0').fill('2');
@@ -17,7 +17,7 @@ test('anonymous progress persists across refresh', async ({ page }) => {
 });
 
 test('anonymous players cannot submit official scores', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/play');
   await expect(page.getByTestId('sudoku-board')).toBeVisible();
 
   await fillSolvedBoard(page);
@@ -26,6 +26,13 @@ test('anonymous players cannot submit official scores', async ({ page }) => {
   await expect(
     page.getByText('Sign in before you submit an official leaderboard time.'),
   ).toBeVisible();
+});
+
+test('home page stays focused on landing content and routes into play', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(page.getByRole('link', { name: /play today/i })).toBeVisible();
+  await expect(page.getByTestId('sudoku-board')).toHaveCount(0);
 });
 
 test('registered players can submit a solve and see it in leaderboard and history', async ({
@@ -53,7 +60,7 @@ test('registered players can submit a solve and see it in leaderboard and histor
 
   await page.getByRole('button', { name: 'Create account' }).click();
 
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/play$/);
   await expect(page.getByTestId('sudoku-board')).toBeVisible();
 
   await fillSolvedBoard(page);

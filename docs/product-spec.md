@@ -15,15 +15,16 @@ Ship a simple daily Sudoku website where anyone can play the same daily puzzle, 
 ### Anonymous Play
 
 1. Visit the home page.
-2. Load the current UTC daily puzzle.
-3. Play immediately with no sign-in requirement.
-4. Refresh or return later and resume from browser-local progress.
-5. If the puzzle is solved while anonymous, show a prompt to create an account or sign in to submit future scores.
+2. Read a concise landing page and choose to start today's puzzle.
+3. Open `/play` and load the current UTC daily puzzle.
+4. Play immediately with no sign-in requirement.
+5. Refresh or return later and resume from browser-local progress.
+6. If the puzzle is solved while anonymous, show a prompt to create an account or sign in to submit future scores.
 
 ### Registered Play
 
 1. Create an account with email, display name, and password.
-2. Log in and load the same daily puzzle as everyone else.
+2. Log in and open the same daily puzzle as everyone else at `/play`.
 3. Solve the puzzle and submit an official completion.
 4. Appear on the daily leaderboard.
 5. View personal completion history from prior days.

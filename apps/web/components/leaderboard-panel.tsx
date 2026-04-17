@@ -9,9 +9,9 @@ type LeaderboardPanelProps = {
   loading?: boolean;
 };
 
-export function LeaderboardPanel({ leaderboard, loading = false }: LeaderboardPanelProps) {
+export function LeaderboardContent({ leaderboard, loading = false }: LeaderboardPanelProps) {
   return (
-    <section className="panel">
+    <>
       <div className="panel-header">
         <div>
           <p className="eyebrow">Leaderboard</p>
@@ -43,6 +43,14 @@ export function LeaderboardPanel({ leaderboard, loading = false }: LeaderboardPa
           ))}
         </ol>
       ) : null}
+    </>
+  );
+}
+
+export function LeaderboardPanel(props: LeaderboardPanelProps) {
+  return (
+    <section className="panel">
+      <LeaderboardContent {...props} />
     </section>
   );
 }
