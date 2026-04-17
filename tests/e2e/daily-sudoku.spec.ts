@@ -32,9 +32,25 @@ test('registered players can submit a solve and see it in leaderboard and histor
   page,
 }) => {
   await page.goto('/auth/signup');
-  await page.getByLabel('Display name').fill('Playwright Ace');
-  await page.getByLabel('Email').fill('playwright@example.com');
-  await page.getByLabel('Password').fill('super-secret');
+  const displayNameInput = page.getByLabel('Display name');
+  const emailInput = page.getByLabel('Email');
+  const passwordInput = page.getByLabel('Password');
+
+  await displayNameInput.focus();
+  await page.keyboard.type('Playwright Ace');
+
+  await page.keyboard.press('Tab');
+  await expect(emailInput).toBeFocused();
+  await page.keyboard.type('playwright@example.com');
+
+  await page.keyboard.press('Tab');
+  await expect(passwordInput).toBeFocused();
+  await page.keyboard.type('super-secret');
+
+  await expect(displayNameInput).toHaveValue('Playwright Ace');
+  await expect(emailInput).toHaveValue('playwright@example.com');
+  await expect(passwordInput).toHaveValue('super-secret');
+
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await expect(page).toHaveURL(/\/$/);
