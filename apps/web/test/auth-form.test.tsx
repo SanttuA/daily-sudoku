@@ -89,7 +89,7 @@ describe('AuthForm', () => {
 
     expect(mockLogIn).not.toHaveBeenCalled();
     expect(mockApplySession).toHaveBeenCalledWith(session);
-    expect(mockPush).toHaveBeenCalledWith('/');
+    expect(mockPush).toHaveBeenCalledWith('/play');
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
 });

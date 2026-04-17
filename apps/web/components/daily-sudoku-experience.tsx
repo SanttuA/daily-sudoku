@@ -2,15 +2,19 @@
 
 import type { DailyLeaderboardResponse, DailyPuzzle } from '@daily-sudoku/contracts';
 import { isPlayableBoardState, isSolvedByRules } from '@daily-sudoku/puzzles';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 import { ApiError, getDailyLeaderboard, getDailyPuzzle, submitCompletion } from '../lib/api';
 import { clearProgress, loadProgress, saveProgress } from '../lib/puzzle-progress';
 import { formatElapsedSeconds, formatPuzzleDateLabel } from '../lib/time';
 import { useAuth } from './auth-provider';
-import { LeaderboardPanel } from './leaderboard-panel';
+import { LeaderboardContent } from './leaderboard-panel';
 import { SudokuBoard } from './sudoku-board';
+
+function isSolvedBoard(givens: string, board: string): boolean {
+  return /^[1-9]{81}$/.test(board) && isPlayableBoardState(givens, board) && isSolvedByRules(board);
+}
 
 export function DailySudokuExperience() {
   const { user, loading: authLoading } = useAuth();
@@ -20,6 +24,7 @@ export function DailySudokuExperience() {
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
@@ -59,11 +64,15 @@ export function DailySudokuExperience() {
     });
   }, [board, completedAt, puzzle?.puzzleDate, startedAt]);
 
-  const solved =
-    !!puzzle &&
-    /^[1-9]{81}$/.test(board) &&
-    isPlayableBoardState(puzzle.givens, board) &&
-    isSolvedByRules(board);
+  useEffect(() => {
+    if (!puzzle || board !== puzzle.givens || startedAt || completedAt) {
+      return;
+    }
+
+    clearProgress(puzzle.puzzleDate);
+  }, [board, completedAt, puzzle, startedAt]);
+
+  const solved = !!puzzle && isSolvedBoard(puzzle.givens, board);
 
   useEffect(() => {
     if (solved && !completedAt) {
@@ -72,17 +81,19 @@ export function DailySudokuExperience() {
     }
   }, [completedAt, solved]);
 
-  const elapsedSeconds =
+  const displayElapsedSeconds =
     startedAt === null
       ? 0
       : Math.max(
-          1,
+          0,
           Math.floor(
             ((completedAt ? new Date(completedAt).getTime() : clockTick) -
               new Date(startedAt).getTime()) /
               1000,
           ),
         );
+
+  const submissionElapsedSeconds = startedAt === null ? 0 : Math.max(1, displayElapsedSeconds);
 
   async function loadPuzzle(): Promise<void> {
     setLoading(true);
@@ -97,16 +108,14 @@ export function DailySudokuExperience() {
           ? storedProgress.board
           : nextPuzzle.givens;
       const restoredCompletion =
-        storedProgress?.completedAt &&
-        /^[1-9]{81}$/.test(restoredBoard) &&
-        isPlayableBoardState(nextPuzzle.givens, restoredBoard) &&
-        isSolvedByRules(restoredBoard)
+        storedProgress?.completedAt && isSolvedBoard(nextPuzzle.givens, restoredBoard)
           ? storedProgress.completedAt
           : null;
+      const restoredStartedAt = storedProgress?.startedAt ?? restoredCompletion ?? null;
 
       setPuzzle(nextPuzzle);
       setBoard(restoredBoard);
-      setStartedAt(storedProgress?.startedAt ?? new Date().toISOString());
+      setStartedAt(restoredStartedAt);
       setCompletedAt(restoredCompletion);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Could not load the daily puzzle.');
@@ -116,16 +125,26 @@ export function DailySudokuExperience() {
   }
 
   async function loadLeaderboard(puzzleDate: string): Promise<void> {
+    setLeaderboardLoading(true);
+
     try {
       const response = await getDailyLeaderboard(puzzleDate);
       setLeaderboard(response);
     } catch {
       setLeaderboard(null);
+    } finally {
+      setLeaderboardLoading(false);
     }
   }
 
   function updateBoard(index: number, nextValue: string): void {
-    if (!puzzle) {
+    if (!puzzle || puzzle.givens[index] !== '0') {
+      return;
+    }
+
+    const replacement = nextValue || '0';
+
+    if (board[index] === replacement) {
       return;
     }
 
@@ -136,9 +155,13 @@ export function DailySudokuExperience() {
           return value;
         }
 
-        return nextValue || '0';
+        return replacement;
       })
       .join('');
+
+    if (!startedAt) {
+      setStartedAt(new Date().toISOString());
+    }
 
     setBoard(nextBoard);
     setSubmitError(null);
@@ -154,6 +177,11 @@ export function DailySudokuExperience() {
       return;
     }
 
+    if (!startedAt) {
+      setSubmitError('Could not determine your solve time. Reset the board and try again.');
+      return;
+    }
+
     if (!user) {
       setSubmitError('Sign in before you submit an official leaderboard time.');
       return;
@@ -166,7 +194,7 @@ export function DailySudokuExperience() {
     try {
       const response = await submitCompletion({
         puzzleDate: puzzle.puzzleDate,
-        elapsedSeconds,
+        elapsedSeconds: submissionElapsedSeconds,
         finalGrid: board,
       });
 
@@ -184,93 +212,100 @@ export function DailySudokuExperience() {
     }
   }
 
-  return (
-    <div className="page-grid">
-      <section className="hero-card">
-        <div className="hero-copy">
-          <p className="eyebrow">Daily Sudoku</p>
-          <h1>A single UTC grid, shared by everyone.</h1>
-          <p className="supporting-copy">
-            Play instantly, keep progress on this device, and sign in only when you want your solve
-            time to count on the official board.
-          </p>
-          {puzzle ? (
-            <div className="hero-stats">
-              <div className="stat-block">
-                <span className="muted-label">Puzzle date</span>
-                <strong>{formatPuzzleDateLabel(puzzle.puzzleDate)}</strong>
-              </div>
-              <div className="stat-block">
-                <span className="muted-label">Open cells</span>
-                <strong>{puzzle.editableCellCount}</strong>
-              </div>
-              <div className="stat-block">
-                <span className="muted-label">Timer</span>
-                <strong data-testid="elapsed-timer">{formatElapsedSeconds(elapsedSeconds)}</strong>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </section>
+  function resetBoard(): void {
+    if (!puzzle) {
+      return;
+    }
 
-      <section className="panel puzzle-panel">
+    setBoard(puzzle.givens);
+    setStartedAt(null);
+    setCompletedAt(null);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+    clearProgress(puzzle.puzzleDate);
+  }
+
+  return (
+    <div className="play-layout">
+      <section className="panel play-board-panel">
         {loading ? <p className="muted-label">Loading the daily board…</p> : null}
         {error ? <p className="error-banner">{error}</p> : null}
         {puzzle ? (
-          <>
-            <div className="panel-header">
-              <div>
-                <p className="eyebrow">Play surface</p>
-                <h2>{formatPuzzleDateLabel(puzzle.puzzleDate)}</h2>
-              </div>
-              <span className="pill">{puzzle.difficulty}</span>
-            </div>
-            <SudokuBoard board={board} givens={puzzle.givens} onChange={updateBoard} />
-            <div className="status-stack">
-              <p className="supporting-copy">
-                {solved
-                  ? 'Grid solved locally. Submit it if you want an official leaderboard result.'
-                  : 'Fill every open cell with digits 1-9. Progress saves automatically in this browser.'}
-              </p>
-              {!authLoading && !user ? (
-                <p className="muted-label">
-                  Anonymous mode is fully playable.{' '}
-                  <Link href="/auth/signup">Create an account</Link> when you want official scores.
-                </p>
-              ) : null}
-              {submitError ? <p className="error-banner">{submitError}</p> : null}
-              {submitSuccess ? <p className="success-banner">{submitSuccess}</p> : null}
-            </div>
-            <div className="action-row">
-              <button
-                className="accent-button"
-                data-testid="submit-score-button"
-                disabled={!solved || submitting}
-                type="button"
-                onClick={() => void handleSubmitScore()}
-              >
-                {submitting ? 'Submitting…' : 'Submit official time'}
-              </button>
-              <button
-                className="ghost-button"
-                type="button"
-                onClick={() => {
-                  setBoard(puzzle.givens);
-                  setStartedAt(new Date().toISOString());
-                  setCompletedAt(null);
-                  setSubmitError(null);
-                  setSubmitSuccess(null);
-                  clearProgress(puzzle.puzzleDate);
-                }}
-              >
-                Reset board
-              </button>
-            </div>
-          </>
+          <SudokuBoard board={board} givens={puzzle.givens} onChange={updateBoard} />
         ) : null}
       </section>
 
-      <LeaderboardPanel leaderboard={leaderboard} loading={loading && !leaderboard} />
+      <aside className="panel play-sidebar">
+        {puzzle ? (
+          <>
+            <div className="play-info-stack">
+              <div className="panel-header play-sidebar-header">
+                <div>
+                  <p className="eyebrow">Today&apos;s puzzle</p>
+                  <h1>{formatPuzzleDateLabel(puzzle.puzzleDate)}</h1>
+                </div>
+                <span className="pill">{puzzle.difficulty}</span>
+              </div>
+              <p className="supporting-copy">
+                The timer stays still until your first editable move. Progress saves automatically
+                in this browser while you play.
+              </p>
+              <div className="play-stat-grid">
+                <div className="play-stat-card">
+                  <span className="muted-label">Timer</span>
+                  <strong data-testid="elapsed-timer">
+                    {formatElapsedSeconds(displayElapsedSeconds)}
+                  </strong>
+                </div>
+                <div className="play-stat-card">
+                  <span className="muted-label">Open cells</span>
+                  <strong>{puzzle.editableCellCount}</strong>
+                </div>
+              </div>
+              <div className="status-stack">
+                <p className="supporting-copy">
+                  {solved
+                    ? 'Grid solved locally. Submit it if you want an official leaderboard result.'
+                    : 'Fill every open cell with digits 1-9. The timer begins on your first move.'}
+                </p>
+                {!authLoading && !user ? (
+                  <p className="muted-label">
+                    Anonymous mode is fully playable.{' '}
+                    <Link href="/auth/signup">Create an account</Link> when you want official
+                    scores.
+                  </p>
+                ) : null}
+                {submitError ? <p className="error-banner">{submitError}</p> : null}
+                {submitSuccess ? <p className="success-banner">{submitSuccess}</p> : null}
+              </div>
+              <div className="action-row">
+                <button
+                  className="accent-button"
+                  data-testid="submit-score-button"
+                  disabled={!solved || submitting}
+                  type="button"
+                  onClick={() => void handleSubmitScore()}
+                >
+                  {submitting ? 'Submitting…' : 'Submit official time'}
+                </button>
+                <button className="ghost-button" type="button" onClick={resetBoard}>
+                  Reset board
+                </button>
+              </div>
+            </div>
+            <div className="play-divider" />
+            <div className="play-leaderboard">
+              <LeaderboardContent leaderboard={leaderboard} loading={leaderboardLoading} />
+            </div>
+          </>
+        ) : (
+          <p className="muted-label">
+            {loading
+              ? 'Loading game info…'
+              : "Game details will appear here once today's puzzle is available."}
+          </p>
+        )}
+      </aside>
     </div>
   );
 }

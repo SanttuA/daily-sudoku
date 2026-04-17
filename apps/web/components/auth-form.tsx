@@ -40,7 +40,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           : await logIn({ email, password });
 
       applySession(session);
-      router.push('/');
+      router.push('/play');
       router.refresh();
     } catch (submitError) {
       if (submitError instanceof ApiError) {

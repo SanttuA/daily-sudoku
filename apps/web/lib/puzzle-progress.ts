@@ -1,7 +1,7 @@
 type StoredPuzzleProgress = {
   puzzleDate: string;
   board: string;
-  startedAt: string;
+  startedAt?: string;
   completedAt?: string;
 };
 

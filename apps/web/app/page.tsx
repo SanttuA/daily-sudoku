@@ -1,5 +1,5 @@
-import { DailySudokuExperience } from '../components/daily-sudoku-experience';
+import { LandingExperience } from '../components/landing-experience';
 
 export default function HomePage() {
-  return <DailySudokuExperience />;
+  return <LandingExperience />;
 }
