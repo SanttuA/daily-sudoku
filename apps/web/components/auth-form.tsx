@@ -11,17 +11,25 @@ type AuthFormProps = {
   mode: 'login' | 'signup';
 };
 
+function getFormValue(formData: FormData, fieldName: string): string {
+  const value = formData.get(fieldName);
+
+  return typeof value === 'string' ? value : '';
+}
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const { applySession } = useAuth();
-  const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = getFormValue(formData, 'email');
+    const password = getFormValue(formData, 'password');
+    const displayName = getFormValue(formData, 'displayName');
+
     setSubmitting(true);
     setError(null);
 
@@ -56,25 +64,12 @@ export function AuthForm({ mode }: AuthFormProps) {
         {mode === 'signup' ? (
           <label className="field">
             <span>Display name</span>
-            <input
-              required
-              autoComplete="nickname"
-              name="displayName"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-            />
+            <input required autoComplete="nickname" name="displayName" />
           </label>
         ) : null}
         <label className="field">
           <span>Email</span>
-          <input
-            required
-            autoComplete="email"
-            name="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
+          <input required autoComplete="email" name="email" type="email" />
         </label>
         <label className="field">
           <span>Password</span>
@@ -84,8 +79,6 @@ export function AuthForm({ mode }: AuthFormProps) {
             minLength={8}
             name="password"
             type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
           />
         </label>
         {error ? <p className="error-banner">{error}</p> : null}
