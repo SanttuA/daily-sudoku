@@ -35,6 +35,7 @@
 - On a first visit with no saved choice, the active theme follows the browser or OS color preference.
 - After a user switches to light or dark mode, that choice persists across refreshes and route changes in the same browser.
 - Light and dark theme styling apply consistently to the landing page, play page, auth pages, leaderboard page, and history page.
+- Browser metadata exposes Daily Sudoku icons for tabs, bookmarks, and install surfaces.
 
 ## Ops
 
