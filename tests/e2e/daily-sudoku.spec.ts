@@ -40,7 +40,7 @@ test('registered players can submit a solve and see it in leaderboard and histor
 }) => {
   await signUp(page, {
     displayName: 'Playwright Ace',
-    email: 'playwright@example.com',
+    email: buildUniqueEmail('playwright'),
     password: 'super-secret',
   });
 
@@ -62,7 +62,7 @@ test('registered players can submit a solve and see it in leaderboard and histor
 test('signed-in users can log out without API errors', async ({ page }) => {
   await signUp(page, {
     displayName: 'Logout Ace',
-    email: 'logout@example.com',
+    email: buildUniqueEmail('logout'),
     password: 'super-secret',
   });
 
@@ -120,4 +120,10 @@ async function fillSolvedBoard(page: Page): Promise<void> {
 
     await page.getByTestId(`cell-${index}`).fill(fixedPuzzle.solution[index] ?? '');
   }
+}
+
+function buildUniqueEmail(prefix: string): string {
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+  return `${prefix}-${uniqueSuffix}@example.com`;
 }
