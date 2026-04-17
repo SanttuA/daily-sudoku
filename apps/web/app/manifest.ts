@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Daily Sudoku',
     short_name: 'Daily Sudoku',
-    display: 'browser',
+    display: 'standalone',
     background_color: '#fff8ec',
     theme_color: '#1f1d19',
     icons: [

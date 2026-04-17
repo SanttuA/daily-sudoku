@@ -42,6 +42,7 @@
 - The gameplay timer stays idle until the player makes their first editable move.
 - When no explicit theme preference exists, the web app follows `prefers-color-scheme` and keeps the active theme in sync while the page is open.
 - Browser tab, bookmark, Apple touch, and manifest icons are served through Next.js metadata files in `apps/web/app`.
+- The web manifest uses an app-style display mode so installed launches open without full browser chrome.
 
 ## Docker And Delivery
 

@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import manifest from '../app/manifest';
 
 describe('web manifest', () => {
-  it('describes the browser icon pack', () => {
+  it('describes the installable icon pack', () => {
     expect(manifest()).toEqual({
       name: 'Daily Sudoku',
       short_name: 'Daily Sudoku',
-      display: 'browser',
+      display: 'standalone',
       background_color: '#fff8ec',
       theme_color: '#1f1d19',
       icons: [
