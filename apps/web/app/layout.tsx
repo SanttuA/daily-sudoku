@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 import { AuthProvider } from '../components/auth-provider';
@@ -11,6 +11,14 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Daily Sudoku',
   description: 'One Sudoku per UTC day with anonymous play and signed-in leaderboards.',
+  manifest: '/manifest.webmanifest',
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fff8ec' },
+    { media: '(prefers-color-scheme: dark)', color: '#18130f' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

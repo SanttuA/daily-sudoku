@@ -41,6 +41,7 @@
 - The `/play` route is the primary play surface and includes the puzzle board, timer, gameplay state, and leaderboard context.
 - The gameplay timer stays idle until the player makes their first editable move.
 - When no explicit theme preference exists, the web app follows `prefers-color-scheme` and keeps the active theme in sync while the page is open.
+- Browser tab, bookmark, Apple touch, and manifest icons are served through Next.js metadata files in `apps/web/app`.
 
 ## Docker And Delivery
 
