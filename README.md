@@ -100,3 +100,7 @@ Pull requests run:
 - The repo is intentionally spec-driven. Update `docs/` before changing behavior.
 - Anonymous players never create official leaderboard entries in v1.
 - The current execution environment here did not provide a working Node/npm runtime, so the codebase was scaffolded without running installs or tests locally.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

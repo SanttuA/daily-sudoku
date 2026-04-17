@@ -1,6 +1,7 @@
 {
   "name": "daily-sudoku",
   "private": true,
+  "license": "MIT",
   "packageManager": "npm@10.9.2",
   "engines": {
     "node": ">=24 <25"
