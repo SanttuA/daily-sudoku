@@ -135,6 +135,29 @@ describe('DailySudokuExperience', () => {
     expect(screen.getByTestId('elapsed-timer')).toHaveTextContent('00:07');
   });
 
+  it('drops legacy start times when the restored board is still untouched', async () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        puzzleDate,
+        board: givens,
+        startedAt: '2026-04-17T11:59:55.000Z',
+      }),
+    );
+
+    await renderExperience();
+
+    expect(screen.getByTestId(`cell-${firstEditableIndex}`)).toHaveValue('');
+    expect(screen.getByTestId('elapsed-timer')).toHaveTextContent('00:00');
+    expect(window.localStorage.getItem(storageKey)).toBeNull();
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(screen.getByTestId('elapsed-timer')).toHaveTextContent('00:00');
+  });
+
   it('resets the board back to an idle timer and clears stored progress', async () => {
     window.localStorage.setItem(
       storageKey,

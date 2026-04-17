@@ -111,7 +111,10 @@ export function DailySudokuExperience() {
         storedProgress?.completedAt && isSolvedBoard(nextPuzzle.givens, restoredBoard)
           ? storedProgress.completedAt
           : null;
-      const restoredStartedAt = storedProgress?.startedAt ?? restoredCompletion ?? null;
+      const restoredStartedAt =
+        restoredBoard === nextPuzzle.givens && restoredCompletion === null
+          ? null
+          : (storedProgress?.startedAt ?? restoredCompletion ?? null);
 
       setPuzzle(nextPuzzle);
       setBoard(restoredBoard);
