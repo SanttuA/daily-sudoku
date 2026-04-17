@@ -12,9 +12,13 @@ export function readStoredTheme(): Theme | null {
     return null;
   }
 
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
 
-  return isTheme(storedTheme) ? storedTheme : null;
+    return isTheme(storedTheme) ? storedTheme : null;
+  } catch {
+    return null;
+  }
 }
 
 export function getSystemTheme(): Theme {

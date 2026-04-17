@@ -84,4 +84,29 @@ describe('SiteHeader theme switcher', () => {
       'true',
     );
   });
+
+  it('falls back without crashing when storage access throws during render', async () => {
+    installMatchMediaMock(true);
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.style.colorScheme = '';
+
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage disabled');
+    });
+
+    expect(() => {
+      render(
+        <ThemeProvider>
+          <SiteHeader />
+        </ThemeProvider>,
+      );
+    }).not.toThrow();
+
+    await waitFor(() => {
+      expect(document.documentElement.dataset.theme).toBe('dark');
+    });
+
+    expect(screen.getByText('Light mode')).toBeInTheDocument();
+    getItemSpy.mockRestore();
+  });
 });
