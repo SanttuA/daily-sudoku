@@ -41,3 +41,4 @@
 
 - The repo includes Docker setup for local Postgres and optional full-stack runs.
 - The repo includes GitHub Actions PR checks for format, lint, typecheck, Vitest, build, and Playwright.
+- The repo includes a one-command workflow to top up bundled daily puzzles without reshuffling historical date assignments.

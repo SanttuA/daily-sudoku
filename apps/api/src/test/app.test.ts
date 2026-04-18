@@ -95,6 +95,34 @@ describe('api', () => {
     expect(leaderboardResponse.json().entries).toHaveLength(0);
   });
 
+  it('returns generated medium puzzles for scheduled future dates', async () => {
+    const futureDate = '2026-04-19';
+    const futureApp = buildApp({
+      config: {
+        ...createTestConfig(),
+        fixedUtcDate: futureDate,
+      },
+      repository: createMemoryRepository(),
+      now: () => new Date('2026-04-19T08:00:00.000Z'),
+    });
+
+    try {
+      const response = await futureApp.inject({
+        method: 'GET',
+        url: '/daily-puzzle',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().puzzle).toMatchObject({
+        difficulty: 'medium',
+        puzzleDate: futureDate,
+        puzzleId: 'generated-2026-04-19',
+      });
+    } finally {
+      await futureApp.close();
+    }
+  });
+
   it('requires auth for official submissions', async () => {
     const puzzle = getPuzzleForUtcDate(fixedDate);
 

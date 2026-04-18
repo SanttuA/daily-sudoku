@@ -15,7 +15,7 @@ A simple daily Sudoku web app built with TypeScript, Turborepo, Next.js, Fastify
 - `apps/web`: Next.js frontend.
 - `apps/api`: Fastify API, Prisma schema, auth, leaderboard logic.
 - `packages/contracts`: shared Zod schemas and exported TypeScript types.
-- `packages/puzzles`: daily puzzle catalog and Sudoku helpers.
+- `packages/puzzles`: bundled puzzle catalog, date schedule, generator CLI, and Sudoku helpers.
 - `docs`: product, technical, and acceptance specs.
 - `tests/e2e`: Playwright coverage for full-stack browser flows.
 
@@ -55,6 +55,8 @@ The default API CORS config accepts both `http://127.0.0.1:3000` and `http://loc
 - `npm run test:e2e:all`: start the local stack and run both Chromium and Firefox.
 - `npm run db:up`: start local Postgres.
 - `npm run db:down`: stop all Docker Compose services.
+- `npm run puzzles:generate -- --days-ahead=365`: top up bundled daily puzzles without changing historical dates.
+- `npm run puzzles:import -- /path/to/catalog.json`: replace the bundled catalog manually when needed.
 - `npm run docker:fullstack`: build and run the full stack with Docker.
 
 Playwright browser selection can be controlled in two ways:
@@ -99,7 +101,8 @@ Pull requests run:
 
 - The repo is intentionally spec-driven. Update `docs/` before changing behavior.
 - Anonymous players never create official leaderboard entries in v1.
-- The current execution environment here did not provide a working Node/npm runtime, so the codebase was scaffolded without running installs or tests locally.
+- Daily puzzle lookup is schedule-based, so growing the catalog does not reshuffle already-assigned dates.
+- `npm run puzzles:generate -- --days-ahead <days> [--seed value] [--preserve-through YYYY-MM-DD]` bootstraps any missing historical schedule entries, then appends generated `medium` puzzles for unscheduled future dates.
 
 ## License
 

@@ -16,6 +16,7 @@
     "build": "tsup src/index.ts --format esm --dts --out-dir dist",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "vitest run",
+    "generate": "tsx src/generate-catalog.ts",
     "import": "tsx src/import-catalog.ts"
   },
   "devDependencies": {
