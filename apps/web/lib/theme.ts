@@ -47,33 +47,3 @@ export function getDocumentTheme(): Theme | null {
 
   return isTheme(documentTheme) ? documentTheme : null;
 }
-
-export function getThemeInitScript(): string {
-  return `
-    (function () {
-      var mediaQuery = ${JSON.stringify(THEME_DARK_MEDIA_QUERY)};
-      var fallbackTheme = 'light';
-
-      try {
-        fallbackTheme = window.matchMedia(mediaQuery).matches ? 'dark' : 'light';
-      } catch (error) {
-        fallbackTheme = 'light';
-      }
-
-      try {
-        var storageKey = ${JSON.stringify(THEME_STORAGE_KEY)};
-        var storedTheme = window.localStorage.getItem(storageKey);
-        var theme =
-          storedTheme === 'light' || storedTheme === 'dark'
-            ? storedTheme
-            : fallbackTheme;
-
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.style.colorScheme = theme;
-      } catch (error) {
-        document.documentElement.dataset.theme = fallbackTheme;
-        document.documentElement.style.colorScheme = fallbackTheme;
-      }
-    })();
-  `;
-}

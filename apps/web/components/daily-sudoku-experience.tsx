@@ -41,7 +41,7 @@ export function DailySudokuExperience() {
     }
 
     void loadLeaderboard(puzzle.puzzleDate);
-  }, [puzzle?.puzzleDate, user?.id]);
+  }, [puzzle?.puzzleDate, user?.displayName]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

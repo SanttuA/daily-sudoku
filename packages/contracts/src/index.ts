@@ -31,10 +31,7 @@ export const passwordSchema = z.string().min(8).max(72);
 export const difficultySchema = z.enum(['easy', 'medium', 'hard']);
 
 export const userSchema = z.object({
-  id: z.string(),
-  email: emailSchema,
   displayName: displayNameSchema,
-  createdAt: z.string().datetime(),
 });
 
 export const authSessionSchema = z.object({
@@ -66,12 +63,12 @@ export const dailyPuzzleResponseSchema = z.object({
 
 export const leaderboardEntrySchema = z.object({
   rank: z.number().int().positive(),
-  userId: z.string(),
   displayName: displayNameSchema,
   puzzleDate: puzzleDateSchema,
   puzzleId: z.string(),
   elapsedSeconds: z.number().int().positive(),
   completedAt: z.string().datetime(),
+  isCurrentUser: z.boolean(),
 });
 
 export const dailyLeaderboardResponseSchema = z.object({

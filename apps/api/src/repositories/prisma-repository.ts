@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 import type {
   CreateSessionInput,
@@ -8,17 +8,26 @@ import type {
   SessionUser,
   StoredCompletion,
 } from './types';
+import { DuplicateEmailError as DuplicateEmailErrorImpl } from './types';
 
 export function createPrismaRepository(prisma = new PrismaClient()): Repository {
   return {
     async createUser(input: CreateUserInput) {
-      return prisma.user.create({
-        data: {
-          email: input.email.toLowerCase(),
-          displayName: input.displayName,
-          passwordHash: input.passwordHash,
-        },
-      });
+      try {
+        return await prisma.user.create({
+          data: {
+            email: input.email.toLowerCase(),
+            displayName: input.displayName,
+            passwordHash: input.passwordHash,
+          },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+          throw new DuplicateEmailErrorImpl();
+        }
+
+        throw error;
+      }
     },
 
     async findUserByEmail(email: string) {

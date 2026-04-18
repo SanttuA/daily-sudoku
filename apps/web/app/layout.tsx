@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import Script from 'next/script';
 
 import { AuthProvider } from '../components/auth-provider';
 import { SiteHeader } from '../components/site-header';
 import { ThemeProvider } from '../components/theme-provider';
-import { getThemeInitScript } from '../lib/theme';
+import { themeInitScriptSrc } from '../lib/security';
 
 import './globals.css';
 
@@ -25,7 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: getThemeInitScript() }} />
+        <Script src={themeInitScriptSrc} strategy="beforeInteractive" />
       </head>
       <body>
         <ThemeProvider>

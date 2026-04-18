@@ -9,6 +9,7 @@ import type {
   StoredCompletion,
   StoredUser,
 } from './types';
+import { DuplicateEmailError as DuplicateEmailErrorImpl } from './types';
 
 type StoredSession = {
   userId: string;
@@ -24,6 +25,10 @@ export function createMemoryRepository(): Repository {
 
   return {
     async createUser(input: CreateUserInput) {
+      if (usersByEmail.has(input.email.toLowerCase())) {
+        throw new DuplicateEmailErrorImpl();
+      }
+
       const user: StoredUser = {
         id: randomUUID(),
         email: input.email.toLowerCase(),

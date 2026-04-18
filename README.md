@@ -42,6 +42,8 @@ Default URLs:
 
 The default API CORS config accepts both `http://127.0.0.1:3000` and `http://localhost:3000`.
 
+Production deployments should serve both the web app and API over HTTPS. Session cookies stay `httpOnly` and become `Secure` in production, and both apps send baseline security headers including CSP and framing protection.
+
 ## Key Commands
 
 - `npm run dev`: run the web app and API together.

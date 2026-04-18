@@ -29,12 +29,8 @@ export function LeaderboardContent({ leaderboard, loading = false }: Leaderboard
         <ol className="leaderboard-list" data-testid="leaderboard-list">
           {leaderboard.entries.map((entry) => (
             <li
-              key={`${entry.userId}-${entry.puzzleDate}`}
-              className={
-                leaderboard.currentUserEntry?.userId === entry.userId
-                  ? 'leaderboard-item current-user'
-                  : 'leaderboard-item'
-              }
+              key={`${entry.puzzleDate}-${entry.rank}`}
+              className={entry.isCurrentUser ? 'leaderboard-item current-user' : 'leaderboard-item'}
             >
               <span className="leaderboard-rank">#{entry.rank}</span>
               <span className="leaderboard-name">{entry.displayName}</span>

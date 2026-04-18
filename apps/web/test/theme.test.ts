@@ -1,7 +1,15 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { installMatchMediaMock } from './match-media';
-import { THEME_STORAGE_KEY, getThemeInitScript } from '../lib/theme';
+import { THEME_STORAGE_KEY } from '../lib/theme';
+
+const themeInitScript = readFileSync(
+  path.resolve(import.meta.dirname, '../public/theme-init.js'),
+  'utf8',
+);
 
 describe('theme bootstrap', () => {
   beforeEach(() => {
@@ -18,7 +26,7 @@ describe('theme bootstrap', () => {
     installMatchMediaMock(false);
     window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
 
-    window.eval(getThemeInitScript());
+    window.eval(themeInitScript);
 
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(document.documentElement.style.colorScheme).toBe('dark');
@@ -27,7 +35,7 @@ describe('theme bootstrap', () => {
   it('falls back to the active system preference when storage is empty', () => {
     installMatchMediaMock(true);
 
-    window.eval(getThemeInitScript());
+    window.eval(themeInitScript);
 
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(document.documentElement.style.colorScheme).toBe('dark');
@@ -39,7 +47,7 @@ describe('theme bootstrap', () => {
       throw new Error('Storage disabled');
     });
 
-    window.eval(getThemeInitScript());
+    window.eval(themeInitScript);
 
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(document.documentElement.style.colorScheme).toBe('dark');

@@ -11,10 +11,7 @@ import type { StoredCompletion, StoredUser } from '../repositories/types';
 
 export function toUserContract(user: StoredUser): User {
   return {
-    id: user.id,
-    email: user.email,
     displayName: user.displayName,
-    createdAt: user.createdAt.toISOString(),
   };
 }
 
@@ -42,15 +39,18 @@ export function toDailyPuzzleResponse(input: {
   };
 }
 
-export function rankEntries(entries: StoredCompletion[]): LeaderboardEntry[] {
+export function rankEntries(
+  entries: StoredCompletion[],
+  currentUserId: string | null,
+): LeaderboardEntry[] {
   return entries.map((entry, index) => ({
     rank: index + 1,
-    userId: entry.userId,
     displayName: entry.displayName,
     puzzleDate: entry.puzzleDate,
     puzzleId: entry.puzzleId,
     elapsedSeconds: entry.elapsedSeconds,
     completedAt: entry.completedAt.toISOString(),
+    isCurrentUser: currentUserId === entry.userId,
   }));
 }
 
@@ -72,9 +72,9 @@ export function toLeaderboardResponse(
   entries: StoredCompletion[],
   currentUserId: string | null,
 ): DailyLeaderboardResponse {
-  const rankedEntries = rankEntries(entries);
+  const rankedEntries = rankEntries(entries, currentUserId);
   const currentUserEntry = currentUserId
-    ? (rankedEntries.find((entry) => entry.userId === currentUserId) ?? null)
+    ? (rankedEntries.find((entry) => entry.isCurrentUser) ?? null)
     : null;
 
   return {

@@ -50,10 +50,7 @@ describe('AuthForm', () => {
     const user = userEvent.setup();
     const session: AuthSession = {
       user: {
-        createdAt: '2026-04-16T00:00:00.000Z',
         displayName: 'Playwright Ace',
-        email: 'playwright@example.com',
-        id: 'user-1',
       },
     };
 

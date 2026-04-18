@@ -49,22 +49,22 @@ describe('contracts', () => {
       entries: [
         {
           rank: 1,
-          userId: 'user_1',
           displayName: 'Daily Solver',
           puzzleDate: '2026-04-16',
           puzzleId: 'variant-1',
           elapsedSeconds: 120,
           completedAt: '2026-04-16T08:00:00.000Z',
+          isCurrentUser: true,
         },
       ],
       currentUserEntry: {
         rank: 1,
-        userId: 'user_1',
         displayName: 'Daily Solver',
         puzzleDate: '2026-04-16',
         puzzleId: 'variant-1',
         elapsedSeconds: 120,
         completedAt: '2026-04-16T08:00:00.000Z',
+        isCurrentUser: true,
       },
     });
 

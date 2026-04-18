@@ -16,9 +16,8 @@ import {
 } from '@daily-sudoku/puzzles';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
-import rateLimit from '@fastify/rate-limit';
 import Fastify from 'fastify';
-import type { FastifyInstance, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
 import {
@@ -39,6 +38,7 @@ import {
   toLeaderboardResponse,
 } from './lib/serializers';
 import { createPrismaRepository } from './repositories/prisma-repository';
+import { DuplicateEmailError } from './repositories/types';
 import type { Repository, StoredUser } from './repositories/types';
 
 declare module 'fastify' {
@@ -57,6 +57,11 @@ type BuildAppOptions = {
 const dateQuerySchema = z.object({
   date: puzzleDateSchema.optional(),
 });
+
+const authRateLimitMax = 5;
+const rateLimitWindowMs = 60_000;
+const apiContentSecurityPolicy =
+  "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
 export function buildApp(options: BuildAppOptions): FastifyInstance {
   const repository = options.repository ?? createPrismaRepository();
@@ -79,12 +84,29 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
         return;
       }
 
-      callback(new Error('Origin not allowed by CORS.'), false);
+      callback(null, false);
     },
     credentials: true,
   });
-  void app.register(rateLimit, {
-    global: false,
+
+  const signupRateLimit = createFixedWindowRateLimiter(
+    authRateLimitMax,
+    rateLimitWindowMs,
+    buildAuthRateLimitKey,
+  );
+  const loginRateLimit = createFixedWindowRateLimiter(
+    authRateLimitMax,
+    rateLimitWindowMs,
+    buildAuthRateLimitKey,
+  );
+  const completionRateLimit = createFixedWindowRateLimiter(
+    options.config.rateLimitMax,
+    rateLimitWindowMs,
+    buildAttemptRateLimitKey,
+  );
+
+  app.addHook('onRequest', async (_request, reply) => {
+    applyApiSecurityHeaders(reply, options.config.nodeEnv);
   });
 
   app.addHook('preHandler', async (request) => {
@@ -110,27 +132,29 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   app.post(
     '/auth/signup',
     {
-      config: {
-        rateLimit: {
-          max: options.config.rateLimitMax,
-          timeWindow: '1 minute',
-        },
-      },
+      preHandler: ensureAllowedWriteOrigin(options.config),
+      preValidation: [signupRateLimit],
     },
     async (request, reply) => {
       const body = signupRequestSchema.parse(request.body);
-      const existingUser = await repository.findUserByEmail(body.email);
 
-      if (existingUser) {
-        return reply.code(409).send({ error: 'An account with that email already exists.' });
+      let user: StoredUser;
+
+      try {
+        const passwordHash = await hashPassword(body.password);
+        user = await repository.createUser({
+          email: body.email,
+          displayName: body.displayName,
+          passwordHash,
+        });
+      } catch (error) {
+        if (error instanceof DuplicateEmailError) {
+          app.log.info('Rejected duplicate signup attempt.');
+          return reply.code(400).send({ error: 'Could not create account.' });
+        }
+
+        throw error;
       }
-
-      const passwordHash = await hashPassword(body.password);
-      const user = await repository.createUser({
-        email: body.email,
-        displayName: body.displayName,
-        passwordHash,
-      });
 
       await createAndSetSession(repository, user.id, reply, options.config, now());
 
@@ -141,12 +165,8 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   app.post(
     '/auth/login',
     {
-      config: {
-        rateLimit: {
-          max: options.config.rateLimitMax,
-          timeWindow: '1 minute',
-        },
-      },
+      preHandler: ensureAllowedWriteOrigin(options.config),
+      preValidation: [loginRateLimit],
     },
     async (request, reply) => {
       const body = loginRequestSchema.parse(request.body);
@@ -162,14 +182,20 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
     },
   );
 
-  app.post('/auth/logout', async (request, reply) => {
-    if (request.sessionTokenHash) {
-      await repository.deleteSession(request.sessionTokenHash);
-    }
+  app.post(
+    '/auth/logout',
+    {
+      preHandler: ensureAllowedWriteOrigin(options.config),
+    },
+    async (request, reply) => {
+      if (request.sessionTokenHash) {
+        await repository.deleteSession(request.sessionTokenHash);
+      }
 
-    clearSessionCookie(reply);
-    return reply.code(204).send();
-  });
+      clearSessionCookie(reply);
+      return reply.code(204).send();
+    },
+  );
 
   app.get('/daily-puzzle', async (request) => {
     const query = dateQuerySchema.parse(request.query ?? {});
@@ -198,12 +224,7 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
   app.post(
     '/attempts/complete',
     {
-      config: {
-        rateLimit: {
-          max: options.config.rateLimitMax,
-          timeWindow: '1 minute',
-        },
-      },
+      preHandler: [ensureAllowedWriteOrigin(options.config), completionRateLimit],
     },
     async (request, reply) => {
       if (!request.authUser) {
@@ -300,4 +321,127 @@ function resolvePuzzleDate(
   now: () => Date,
 ): string {
   return normalizeUtcDate(requestedDate ?? fixedUtcDate ?? now());
+}
+
+function buildAuthRateLimitKey(request: FastifyRequest): string {
+  return `auth:${request.ip}:${extractNormalizedEmail(request.body)}`;
+}
+
+function buildAttemptRateLimitKey(request: FastifyRequest): string {
+  return request.authUser?.id ? `attempt:${request.authUser.id}` : `attempt:${request.ip}`;
+}
+
+function extractNormalizedEmail(body: unknown): string {
+  if (!body || typeof body !== 'object' || !('email' in body)) {
+    return 'unknown';
+  }
+
+  const email = body.email;
+
+  return typeof email === 'string' ? email.trim().toLowerCase() : 'unknown';
+}
+
+function ensureAllowedWriteOrigin(config: AppConfig) {
+  return async function allowedWriteOriginGuard(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> {
+    if (config.nodeEnv === 'test') {
+      return;
+    }
+
+    const requestOrigin = extractRequestOrigin(request);
+
+    if (requestOrigin && config.webOrigins.includes(requestOrigin)) {
+      return;
+    }
+
+    reply.code(403).send({ error: 'Origin not allowed.' });
+  };
+}
+
+function extractRequestOrigin(request: FastifyRequest): string | null {
+  const explicitOrigin = readOriginHeader(request.headers.origin);
+
+  if (explicitOrigin) {
+    return explicitOrigin;
+  }
+
+  return readRefererOrigin(request.headers.referer);
+}
+
+function readOriginHeader(value: string | string[] | undefined): string | null {
+  if (typeof value !== 'string' || value.length === 0) {
+    return null;
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function readRefererOrigin(value: string | string[] | undefined): string | null {
+  if (typeof value !== 'string' || value.length === 0) {
+    return null;
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function applyApiSecurityHeaders(reply: FastifyReply, nodeEnv: AppConfig['nodeEnv']): void {
+  reply.header('Content-Security-Policy', apiContentSecurityPolicy);
+  reply.header(
+    'Permissions-Policy',
+    'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
+  );
+  reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  reply.header('X-Content-Type-Options', 'nosniff');
+  reply.header('X-Frame-Options', 'DENY');
+
+  if (nodeEnv === 'production') {
+    reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+}
+
+function createFixedWindowRateLimiter(
+  max: number,
+  timeWindowMs: number,
+  keyGenerator: (request: FastifyRequest) => string,
+) {
+  const counters = new Map<string, { count: number; resetsAt: number }>();
+
+  return async function fixedWindowRateLimiter(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> {
+    const key = keyGenerator(request);
+    const currentTime = Date.now();
+    const existingCounter = counters.get(key);
+
+    if (!existingCounter || existingCounter.resetsAt <= currentTime) {
+      counters.set(key, {
+        count: 1,
+        resetsAt: currentTime + timeWindowMs,
+      });
+      return;
+    }
+
+    existingCounter.count += 1;
+
+    if (existingCounter.count <= max) {
+      return;
+    }
+
+    reply.header(
+      'Retry-After',
+      Math.max(1, Math.ceil((existingCounter.resetsAt - currentTime) / 1000)).toString(),
+    );
+    reply.code(429).send({ error: 'Too many requests.' });
+  };
 }
