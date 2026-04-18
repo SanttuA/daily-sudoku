@@ -5,6 +5,7 @@ import {
   getPuzzleCatalog,
   getPuzzleForUtcDate,
   getPuzzleIndexForUtcDate,
+  getPuzzleSchedule,
   isPlayableBoardState,
   normalizeUtcDate,
   validateSubmittedSolution,
@@ -29,6 +30,20 @@ describe('puzzles', () => {
 
   it('selects puzzles deterministically from a UTC date', () => {
     expect(getPuzzleIndexForUtcDate('2026-04-16')).toBe(getPuzzleIndexForUtcDate('2026-04-16'));
+  });
+
+  it('preserves legacy date assignments in the explicit schedule', () => {
+    expect(getPuzzleForUtcDate('2026-01-01').id).toBe('variant-1');
+    expect(getPuzzleForUtcDate('2026-04-16').id).toBe('variant-7');
+    expect(getPuzzleForUtcDate('2026-04-18').id).toBe('variant-9');
+  });
+
+  it('exposes the bundled schedule through the generated horizon', () => {
+    const schedule = getPuzzleSchedule();
+
+    expect(schedule['2026-04-18']).toBe('variant-9');
+    expect(schedule['2026-04-19']).toBe('generated-2026-04-19');
+    expect(schedule['2027-04-18']).toBe('generated-2027-04-18');
   });
 
   it('exposes editable cells for the current puzzle', () => {

@@ -6,7 +6,7 @@
 - `apps/web`: Next.js App Router frontend in TypeScript.
 - `apps/api`: Fastify REST API in TypeScript.
 - `packages/contracts`: shared Zod schemas and TypeScript types.
-- `packages/puzzles`: prebuilt puzzle catalog and deterministic UTC date selection helpers.
+- `packages/puzzles`: bundled puzzle catalog, bundled per-date schedule, UTC helpers, and offline puzzle generation utilities.
 
 ## Runtime And Tooling
 
@@ -32,6 +32,13 @@
 - Public puzzle responses expose givens and metadata, never the solution.
 - Completion submission validates the final grid against the committed puzzle solution.
 
+## Puzzle Supply Rules
+
+- Daily puzzle selection resolves from a bundled `schedule.json` date map, not modulo rotation.
+- Historical date assignments stay stable when the catalog grows.
+- New bundled puzzles are generated offline in `packages/puzzles` and committed before deploy/runtime.
+- Generator output is intentionally `medium`-labeled in v1 and does not include heuristic difficulty grading yet.
+
 ## Frontend Rules
 
 - Puzzle progress is stored in browser local storage by `puzzleDate`.
@@ -49,6 +56,7 @@
 - Local Postgres is provided through `docker-compose.yml`.
 - Full local stack is available with the `fullstack` Compose profile.
 - `apps/web/Dockerfile` and `apps/api/Dockerfile` produce production-ready Node 24 images.
+- Future puzzle coverage is topped up with `npm run puzzles:generate -- --days-ahead <days> [--seed value] [--preserve-through YYYY-MM-DD]`.
 
 ## CI
 
