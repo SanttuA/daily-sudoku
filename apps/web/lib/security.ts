@@ -19,7 +19,9 @@ export function getWebContentSecurityPolicy(
   nodeEnv = process.env.NODE_ENV,
 ): string {
   const connectSources = new Set<string>(["'self'", ...defaultApiOrigins]);
-  const scriptSources = new Set<string>(["'self'"]);
+  // With static response headers, Next.js runtime/bootstrap scripts still need inline execution
+  // unless we move to a nonce-based CSP.
+  const scriptSources = new Set<string>(["'self'", "'unsafe-inline'"]);
   const configuredApiOrigin = tryParseOrigin(configuredApiBaseUrl);
 
   if (configuredApiOrigin) {
@@ -30,7 +32,6 @@ export function getWebContentSecurityPolicy(
     connectSources.add('ws:');
     connectSources.add('wss:');
     scriptSources.add("'unsafe-eval'");
-    scriptSources.add("'unsafe-inline'");
   }
 
   return [

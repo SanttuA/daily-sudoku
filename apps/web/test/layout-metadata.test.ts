@@ -56,7 +56,7 @@ describe('layout metadata', () => {
     );
   });
 
-  it('keeps production csp free of inline script allowances', () => {
+  it('keeps production csp compatible with next runtime while avoiding eval', () => {
     const productionHeaders = getWebSecurityHeaders(undefined, 'production');
     const contentSecurityPolicy = productionHeaders.find(
       (entry) => entry.key === 'Content-Security-Policy',
@@ -65,8 +65,8 @@ describe('layout metadata', () => {
       ?.split('; ')
       .find((directive) => directive.startsWith('script-src'));
 
-    expect(scriptDirective).toBe("script-src 'self'");
-    expect(scriptDirective).not.toContain("'unsafe-inline'");
+    expect(scriptDirective).toContain("'self'");
+    expect(scriptDirective).toContain("'unsafe-inline'");
     expect(scriptDirective).not.toContain("'unsafe-eval'");
   });
 });

@@ -41,7 +41,7 @@
 
 - Puzzle progress is stored in browser local storage by `puzzleDate`.
 - Theme preference is stored in browser local storage and applied to `<html data-theme>` before React hydration.
-- Theme bootstrapping is loaded from a first-party static script so web CSP does not require inline script allowances.
+- Theme bootstrapping is loaded from a first-party static script, but the current static-header CSP still allows inline scripts for the Next.js runtime until a nonce-based policy is introduced.
 - All API calls use the shared contracts package and include credentials when auth is required.
 - The homepage is a landing page with lightweight daily puzzle context and a CTA into `/play`.
 - The `/play` route is the primary play surface and includes the puzzle board, timer, gameplay state, and leaderboard context.
