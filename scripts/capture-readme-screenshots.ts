@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createServer } from 'node:net';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { pathToFileURL } from 'node:url';
 
 import { chromium, type Browser, type Page } from '@playwright/test';
 
@@ -451,7 +452,12 @@ function resolveFixedUtcDate(input: string | undefined): string {
 }
 
 async function loadReadmeCapturePuzzle(puzzleDate: string): Promise<ReadmeCapturePuzzle> {
-  const { getPuzzleForUtcDate } = await import('@daily-sudoku/puzzles');
+  const puzzlesModuleUrl = pathToFileURL(
+    path.join(process.cwd(), 'packages/puzzles/dist/index.js'),
+  ).href;
+  const { getPuzzleForUtcDate } = (await import(puzzlesModuleUrl)) as {
+    getPuzzleForUtcDate: (input: string) => ReadmeCapturePuzzle;
+  };
   const puzzle = getPuzzleForUtcDate(puzzleDate);
 
   return {
