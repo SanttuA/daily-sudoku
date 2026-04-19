@@ -23,6 +23,7 @@
     "test:e2e:chromium": "tsx scripts/run-playwright.ts --browser=chromium",
     "test:e2e:firefox": "tsx scripts/run-playwright.ts --browser=firefox",
     "test:e2e:all": "tsx scripts/run-playwright.ts --browser=all",
+    "screenshots:readme": "tsx scripts/capture-readme-screenshots.ts",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v",
