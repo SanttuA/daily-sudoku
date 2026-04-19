@@ -26,16 +26,22 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://daily_sudoku:daily_sudoku@db:5432/daily_sudoku?schema=public
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://daily_sudoku:daily_sudoku@db:5432/daily_sudoku?schema=public}
       PORT: 4000
       HOST: 0.0.0.0
-      WEB_ORIGIN: http://127.0.0.1:3000,http://localhost:3000
-      SESSION_SECRET: change-me-in-production
-      SESSION_TTL_DAYS: 30
-      RATE_LIMIT_MAX: 50
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://127.0.0.1:3000,http://localhost:3000}
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-50}
+      FIXED_UTC_DATE: ${FIXED_UTC_DATE:-}
       NODE_ENV: production
     ports:
       - '4000:4000'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:4000/health || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   web:
     profiles: ['fullstack']
@@ -43,13 +49,19 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:4000
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:4000}
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:4000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:4000}
     ports:
       - '3000:3000'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
 volumes:
   postgres_data:

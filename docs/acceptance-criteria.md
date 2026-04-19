@@ -40,5 +40,6 @@
 ## Ops
 
 - The repo includes Docker setup for local Postgres and optional full-stack runs.
+- The repo includes a documented local production-validation workflow that boots the production Docker images with production-style environment values.
 - The repo includes GitHub Actions PR checks for format, lint, typecheck, Vitest, build, and Playwright.
 - The repo includes a one-command workflow to top up bundled daily puzzles without reshuffling historical date assignments.
