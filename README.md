@@ -2,6 +2,14 @@
 
 A simple daily Sudoku web app built with TypeScript, Turborepo, Next.js, Fastify, Prisma, Vitest, Playwright, Oxlint, Prettier, Docker, and GitHub Actions.
 
+## App Preview
+
+![Daily Sudoku play view shown side by side in light mode and dark mode](docs/images/readme/play-compare.png)
+_The `/play` experience shown with the same seeded daily board in both themes._
+
+![Daily Sudoku landing page in light mode](docs/images/readme/landing-light.png)
+_The home page keeps the daily briefing and the route into today’s puzzle front and center._
+
 ## What ships in v1
 
 - One shared Sudoku puzzle per UTC day.
@@ -59,6 +67,7 @@ The default API CORS config accepts both `http://127.0.0.1:3000` and `http://loc
 - `npm run test:e2e`: start the local stack and run Playwright with Chromium by default.
 - `npm run test:e2e:firefox`: start the local stack and run Playwright in Firefox.
 - `npm run test:e2e:all`: start the local stack and run both Chromium and Firefox.
+- `npm run screenshots:readme`: capture the README preview images from a seeded local stack.
 - `npm run db:up`: start local Postgres.
 - `npm run db:down`: stop all Docker Compose services.
 - `npm run puzzles:generate -- --days-ahead=365`: top up bundled daily puzzles without changing historical dates.
