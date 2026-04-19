@@ -59,7 +59,7 @@ const dateQuerySchema = z.object({
 });
 
 export function buildApp(options: BuildAppOptions): FastifyInstance {
-  const repository = options.repository ?? createPrismaRepository();
+  const repository = options.repository ?? createPrismaRepository(options.config.databaseUrl);
   const now = options.now ?? (() => new Date());
 
   const app = Fastify({

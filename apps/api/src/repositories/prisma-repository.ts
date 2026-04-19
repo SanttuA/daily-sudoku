@@ -1,3 +1,4 @@
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
 import type {
@@ -9,7 +10,12 @@ import type {
   StoredCompletion,
 } from './types';
 
-export function createPrismaRepository(prisma = new PrismaClient()): Repository {
+export function createPrismaRepository(
+  databaseUrl: string,
+  prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: databaseUrl }),
+  }),
+): Repository {
   return {
     async createUser(input: CreateUserInput) {
       return prisma.user.create({
