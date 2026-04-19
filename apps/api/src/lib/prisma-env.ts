@@ -3,18 +3,20 @@ import { existsSync, readFileSync } from 'node:fs';
 export function loadEnvFile(
   envPath: string,
   targetEnv: Record<string, string | undefined> = process.env,
+  protectedKeys: ReadonlySet<string> = new Set(),
 ): void {
   if (!existsSync(envPath)) {
     return;
   }
 
   const source = readFileSync(envPath, 'utf8');
-  applyEnvSource(source, targetEnv);
+  applyEnvSource(source, targetEnv, protectedKeys);
 }
 
 export function applyEnvSource(
   source: string,
   targetEnv: Record<string, string | undefined>,
+  protectedKeys: ReadonlySet<string> = new Set(),
 ): void {
   for (const rawLine of source.split(/\r?\n/u)) {
     const line = rawLine.trim();
@@ -38,7 +40,7 @@ export function applyEnvSource(
 
     const nextValue = stripWrappingQuotes(rawValue);
 
-    if (targetEnv[key] !== undefined) {
+    if (protectedKeys.has(key) && targetEnv[key] !== undefined) {
       continue;
     }
 

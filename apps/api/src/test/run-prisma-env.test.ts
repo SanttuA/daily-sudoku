@@ -35,12 +35,33 @@ describe('run-prisma env loading', () => {
         'RATE_LIMIT_MAX="50"',
       ].join('\n'),
       env,
+      new Set(['DATABASE_URL', 'SESSION_SECRET']),
     );
 
     expect(env).toMatchObject({
       DATABASE_URL: 'postgresql://daily_sudoku:daily_sudoku@db:5432/daily_sudoku?schema=public',
       SESSION_SECRET: 'already-set-secret',
       RATE_LIMIT_MAX: '50',
+    });
+  });
+
+  it('allows later env files to override earlier loaded values when the key was not in the original environment', () => {
+    const env: Record<string, string | undefined> = {};
+    const protectedKeys = new Set<string>();
+
+    applyEnvSource(
+      'DATABASE_URL="postgresql://daily_sudoku:daily_sudoku@127.0.0.1:5433/daily_sudoku?schema=public"',
+      env,
+      protectedKeys,
+    );
+    applyEnvSource(
+      'DATABASE_URL="postgresql://daily_sudoku:daily_sudoku@db:5432/daily_sudoku?schema=public"',
+      env,
+      protectedKeys,
+    );
+
+    expect(env).toMatchObject({
+      DATABASE_URL: 'postgresql://daily_sudoku:daily_sudoku@db:5432/daily_sudoku?schema=public',
     });
   });
 

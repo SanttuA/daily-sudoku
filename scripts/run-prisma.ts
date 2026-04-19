@@ -10,9 +10,14 @@ const rootEnvPath = path.join(repoRoot, '.env');
 const apiEnvPath = path.join(repoRoot, 'apps', 'api', '.env');
 const schemaPath = path.join(repoRoot, 'apps', 'api', 'prisma', 'schema.prisma');
 const npxCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const protectedEnvKeys = new Set(
+  Object.entries(process.env)
+    .filter(([, value]) => value !== undefined)
+    .map(([key]) => key),
+);
 
-loadEnvFile(rootEnvPath);
-loadEnvFile(apiEnvPath);
+loadEnvFile(rootEnvPath, process.env, protectedEnvKeys);
+loadEnvFile(apiEnvPath, process.env, protectedEnvKeys);
 
 const prismaArgs = [...process.argv.slice(2), '--schema', schemaPath];
 
