@@ -56,6 +56,8 @@
 - Local Postgres is provided through `docker-compose.yml`.
 - Full local stack is available with the `fullstack` Compose profile.
 - `apps/web/Dockerfile` and `apps/api/Dockerfile` produce production-ready Node 24 images.
+- Local production validation uses the `fullstack` Compose profile to boot the production images and real production startup commands.
+- The Compose production path reads browser-facing env values such as `WEB_ORIGIN`, `NEXT_PUBLIC_API_BASE_URL`, `SESSION_SECRET`, and an optional `DOCKER_DATABASE_URL` from the environment or `.env`.
 - Future puzzle coverage is topped up with `npm run puzzles:generate -- --days-ahead <days> [--seed value] [--preserve-through YYYY-MM-DD]`.
 
 ## CI

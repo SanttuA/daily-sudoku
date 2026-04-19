@@ -31,6 +31,7 @@
     "db:seed": "npm --workspace @daily-sudoku/puzzles run build && npm --workspace @daily-sudoku/api run seed",
     "puzzles:generate": "npm --workspace @daily-sudoku/puzzles run generate --",
     "docker:fullstack": "docker compose --profile fullstack up --build",
+    "docker:prod": "docker compose --profile fullstack up --build",
     "puzzles:import": "npm --workspace @daily-sudoku/puzzles run import",
     "ci": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
