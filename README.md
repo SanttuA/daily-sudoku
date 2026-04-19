@@ -19,6 +19,11 @@ A simple daily Sudoku web app built with TypeScript, Turborepo, Next.js, Fastify
 - `docs`: product, technical, and acceptance specs.
 - `tests/e2e`: Playwright coverage for full-stack browser flows.
 
+## Guides
+
+- [Development Guide](docs/development-guide.md): install, run, and use the app in local development.
+- [Production Guide](docs/production-guide.md): configure, run, and use the production build on a Docker-friendly machine.
+
 ## Local Setup
 
 1. Install Node `24.x` and npm.
