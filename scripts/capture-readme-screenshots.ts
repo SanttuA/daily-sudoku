@@ -12,12 +12,8 @@ const npxCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 
 const screenshotDatabaseUrl =
   'postgresql://daily_sudoku:daily_sudoku@127.0.0.1:5433/daily_sudoku?schema=readme_screenshots';
-const fixedUtcDate = '2026-04-16';
+const defaultFixedUtcDate = '2026-04-16';
 const themeStorageKey = 'daily-sudoku/theme';
-const givens = '091340678348062910705918034526407189180529407079680523637094850804176092912803746';
-const solution =
-  '291345678348762915765918234526437189183529467479681523637294851854176392912853746';
-const progressBoard = fillProgressBoard(givens, solution, [0, 12, 24, 38, 50, 64, 76]);
 
 const outputDirectory = path.join(process.cwd(), 'docs/images/readme');
 const playCompareOutputPath = path.join(outputDirectory, 'play-compare.png');
@@ -26,6 +22,7 @@ const landingOutputPath = path.join(outputDirectory, 'landing-light.png');
 async function main(): Promise<void> {
   const children: ChildProcess[] = [];
   const host = process.env.PLAYWRIGHT_HOST ?? '127.0.0.1';
+  const effectiveFixedUtcDate = resolveFixedUtcDate(process.env.FIXED_UTC_DATE);
   const apiPort = await resolvePort(process.env.PLAYWRIGHT_API_PORT, 4000, host);
   const webPort = await resolvePort(
     process.env.PLAYWRIGHT_WEB_PORT,
@@ -46,7 +43,7 @@ async function main(): Promise<void> {
     SESSION_SECRET: process.env.SESSION_SECRET ?? 'readme-screenshot-session-secret-1234',
     SESSION_TTL_DAYS: process.env.SESSION_TTL_DAYS ?? '30',
     RATE_LIMIT_MAX: process.env.RATE_LIMIT_MAX ?? '200',
-    FIXED_UTC_DATE: process.env.FIXED_UTC_DATE ?? fixedUtcDate,
+    FIXED_UTC_DATE: effectiveFixedUtcDate,
     NODE_ENV: 'test',
   };
   const webEnv = {
@@ -70,16 +67,31 @@ async function main(): Promise<void> {
 
     await mkdir(outputDirectory, { recursive: true });
 
+    const puzzle = await loadReadmeCapturePuzzle(effectiveFixedUtcDate);
+    const progressBoard = buildReadmeProgressBoard(puzzle.givens, puzzle.solution);
     const browser = await chromium.launch({ headless: true });
 
     try {
-      const lightPlayCapture = await capturePlayRoute(browser, webBaseUrl, 'light');
-      const darkPlayCapture = await capturePlayRoute(browser, webBaseUrl, 'dark');
+      const lightPlayCapture = await capturePlayRoute(
+        browser,
+        webBaseUrl,
+        'light',
+        puzzle.puzzleDate,
+        progressBoard,
+      );
+      const darkPlayCapture = await capturePlayRoute(
+        browser,
+        webBaseUrl,
+        'dark',
+        puzzle.puzzleDate,
+        progressBoard,
+      );
       const landingCapture = await captureLandingRoute(browser, webBaseUrl);
       const compareCapture = await buildPlayCompareImage(
         browser,
         lightPlayCapture,
         darkPlayCapture,
+        formatFixedUtcDateLabel(puzzle.puzzleDate),
       );
 
       await writeFile(playCompareOutputPath, compareCapture);
@@ -102,6 +114,12 @@ async function main(): Promise<void> {
     }
   }
 }
+
+type ReadmeCapturePuzzle = {
+  puzzleDate: string;
+  givens: string;
+  solution: string;
+};
 
 async function prepareStack(
   apiEnv: NodeJS.ProcessEnv,
@@ -157,6 +175,8 @@ async function capturePlayRoute(
   browser: Browser,
   webBaseUrl: string,
   theme: 'light' | 'dark',
+  puzzleDate: string,
+  progressBoard: string,
 ): Promise<Buffer> {
   return withCapturePage(browser, {
     route: '/play',
@@ -164,8 +184,8 @@ async function capturePlayRoute(
     webBaseUrl,
     initStorage: {
       [themeStorageKey]: theme,
-      [`daily-sudoku/progress/${fixedUtcDate}`]: JSON.stringify({
-        puzzleDate: fixedUtcDate,
+      [`daily-sudoku/progress/${puzzleDate}`]: JSON.stringify({
+        puzzleDate,
         board: progressBoard,
       }),
     },
@@ -236,6 +256,7 @@ async function buildPlayCompareImage(
   browser: Browser,
   lightPlayCapture: Buffer,
   darkPlayCapture: Buffer,
+  fixedUtcDateLabel: string,
 ): Promise<Buffer> {
   const context = await browser.newContext({
     deviceScaleFactor: 1,
@@ -360,7 +381,7 @@ async function buildPlayCompareImage(
                 <p class="eyebrow">README Preview</p>
                 <h1>Daily puzzle play view in both themes</h1>
                 <p class="supporting">
-                  Real browser captures of the same seeded anonymous game state on April 16, 2026.
+                  Real browser captures of the same seeded anonymous game state on ${fixedUtcDateLabel}.
                 </p>
               </header>
               <section class="compare-grid">
@@ -392,6 +413,24 @@ async function buildPlayCompareImage(
   }
 }
 
+function buildReadmeProgressBoard(givens: string, solution: string): string {
+  const preferredIndexes = [0, 12, 24, 38, 50, 64, 76];
+  const editableIndexes = [...givens].flatMap((value, index) => (value === '0' ? [index] : []));
+  const indexesToFill = preferredIndexes.filter((index) => givens[index] === '0');
+
+  for (const index of editableIndexes) {
+    if (indexesToFill.length >= preferredIndexes.length) {
+      break;
+    }
+
+    if (!indexesToFill.includes(index)) {
+      indexesToFill.push(index);
+    }
+  }
+
+  return fillProgressBoard(givens, solution, indexesToFill);
+}
+
 function fillProgressBoard(baseBoard: string, solvedBoard: string, indexes: number[]): string {
   return baseBoard
     .split('')
@@ -403,6 +442,33 @@ function fillProgressBoard(baseBoard: string, solvedBoard: string, indexes: numb
       return solvedBoard[index] ?? value;
     })
     .join('');
+}
+
+function resolveFixedUtcDate(input: string | undefined): string {
+  const normalizedInput = input?.trim();
+
+  return normalizedInput ? normalizedInput : defaultFixedUtcDate;
+}
+
+async function loadReadmeCapturePuzzle(puzzleDate: string): Promise<ReadmeCapturePuzzle> {
+  const { getPuzzleForUtcDate } = await import('@daily-sudoku/puzzles');
+  const puzzle = getPuzzleForUtcDate(puzzleDate);
+
+  return {
+    puzzleDate: puzzle.puzzleDate,
+    givens: puzzle.givens,
+    solution: puzzle.solution,
+  };
+}
+
+function formatFixedUtcDateLabel(utcDate: string): string {
+  return new Date(`${utcDate}T00:00:00.000Z`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 function toDataUrl(buffer: Buffer): string {
