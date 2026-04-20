@@ -1,7 +1,9 @@
 import { buildApp } from './app';
-import { createConfig } from './lib/config';
+import { createConfig, loadConfigEnvFiles } from './lib/config';
 
 async function main(): Promise<void> {
+  loadConfigEnvFiles();
+
   const config = createConfig(process.env);
   const app = buildApp({ config });
 

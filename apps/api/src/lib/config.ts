@@ -1,4 +1,8 @@
+import path from 'node:path';
+
 import { z } from 'zod';
+
+import { loadEnvFile } from './prisma-env';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
@@ -14,6 +18,21 @@ const envSchema = z.object({
     .transform((value) => value || undefined),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
+
+export function loadConfigEnvFiles(
+  targetEnv: Record<string, string | undefined> = process.env,
+  cwd = process.cwd(),
+): void {
+  const protectedEnvKeys = new Set(
+    Object.entries(targetEnv)
+      .filter(([, value]) => value !== undefined)
+      .map(([key]) => key),
+  );
+  const { apiRoot, repoRoot } = resolveRuntimeRoots(cwd);
+
+  loadEnvFile(path.join(repoRoot, '.env'), targetEnv, protectedEnvKeys);
+  loadEnvFile(path.join(apiRoot, '.env'), targetEnv, protectedEnvKeys);
+}
 
 export type AppConfig = {
   databaseUrl: string;
@@ -42,5 +61,22 @@ export function createConfig(source: Record<string, string | undefined>): AppCon
     rateLimitMax: parsed.RATE_LIMIT_MAX,
     fixedUtcDate: parsed.FIXED_UTC_DATE,
     nodeEnv: parsed.NODE_ENV,
+  };
+}
+
+function resolveRuntimeRoots(cwd: string): { apiRoot: string; repoRoot: string } {
+  const currentDirectory = path.resolve(cwd);
+  const apiRootSuffix = path.join('apps', 'api');
+
+  if (currentDirectory.endsWith(apiRootSuffix)) {
+    return {
+      apiRoot: currentDirectory,
+      repoRoot: path.resolve(currentDirectory, '..', '..'),
+    };
+  }
+
+  return {
+    apiRoot: path.join(currentDirectory, 'apps', 'api'),
+    repoRoot: currentDirectory,
   };
 }

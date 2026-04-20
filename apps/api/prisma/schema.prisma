@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -41,4 +40,3 @@ model CompletionAttempt {
   @@unique([userId, puzzleDate])
   @@index([puzzleDate, elapsedSeconds, completedAt])
 }
-
