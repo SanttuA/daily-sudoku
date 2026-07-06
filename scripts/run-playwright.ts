@@ -47,7 +47,7 @@ async function main(): Promise<void> {
   try {
     await runChecked(npmCommand, ['--workspace', '@daily-sudoku/contracts', 'run', 'build']);
     await runChecked(npmCommand, ['--workspace', '@daily-sudoku/puzzles', 'run', 'build']);
-    await runChecked('docker', ['compose', 'up', '-d', 'db']);
+    await runChecked('docker', ['compose', 'up', '-d', '--wait', 'db']);
     await runChecked(npmCommand, ['run', 'db:generate'], apiEnv);
     await runChecked(npmCommand, ['run', 'db:migrate'], apiEnv);
     await runChecked(npmCommand, ['run', 'db:seed'], apiEnv);
