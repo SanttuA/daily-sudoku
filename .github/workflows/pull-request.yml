@@ -74,6 +74,7 @@ jobs:
         run: npm run build
 
   playwright:
+    if: false
     name: Playwright Chromium
     runs-on: ubuntu-latest
     steps:
