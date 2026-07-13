@@ -1,0 +1,11 @@
+[project]
+name = "robot"
+version = "0.1.0"
+description = "Testing for daily sudoku app"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "robotframework>=7.4.2",
+    "robotframework-browser>=20.0.0",
+    "robotframework-requests>=0.9.7",
+]

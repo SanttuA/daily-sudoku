@@ -1,0 +1,46 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Robot Framework outputs
+results/
+log.html
+report.html
+output.xml
+output*.xml
+xunit.xml
+debug.log
+
+# Browser library artifacts
+playwright-report/
+.browser/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# pytest (if used alongside Robot)
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
