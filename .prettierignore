@@ -1,1 +1,3 @@
 apps/web/next-env.d.ts
+tests/e2e/robot/.venv
+tests/e2e/robot/results
